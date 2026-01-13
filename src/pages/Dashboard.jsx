@@ -117,7 +117,7 @@ export default function Dashboard() {
         {/* PRIMARY STATS */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
           <StatCard title="Total Athletes" value={stats.members} icon={<Users size={18} />} color="indigo" onClick={() => navigate("/members")} />
-          <StatCard title="Active Plan" value={stats.active} icon={<UserCheck size={18} />} color="emerald" onClick={() => navigate("/members")} />
+          <StatCard title="Active Plan" value={stats.active} icon={<UserCheck size={18} />} color="emerald" onClick={() => navigate("/active-members")} />
           <StatCard title="Terminated" value={stats.expired} icon={<UserX size={18} />} color="rose" onClick={() => navigate("/expired-members")} />
           <StatCard title="Attendance" value={stats.todayAttendance} icon={<Activity size={18} />} color="cyan" onClick={() => navigate("/attendance")} />
         </div>

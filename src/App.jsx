@@ -7,6 +7,7 @@ import PunchIn from "./pages/PunchIn";
 import ExpiredMembers from "./pages/ExpiredMembers";
 import DailyAttendance from "./pages/DailyAttendance";
 import Revenue from "./pages/Revenue";
+import ActiveMembers from "./pages/ActiveMembers";
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
         <Route path="/expired-members" element={<ExpiredMembers />} />
         <Route path="/attendance" element={<DailyAttendance />} />
         <Route path="/revenue" element={<Revenue />} />
+        <Route path="/active-members" element={<ActiveMembers />} />
 
         {/* Catch-all for broken links */}
         <Route path="*" element={<Navigate to="/" replace />} />

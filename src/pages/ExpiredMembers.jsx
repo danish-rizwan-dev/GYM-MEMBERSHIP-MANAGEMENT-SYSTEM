@@ -78,7 +78,7 @@ export default function ExpiredMembers() {
     filtered.forEach((m, index) => {
       const amount = getAmount(m.plan);
       const message = encodeURIComponent(
-        `⚠️ MEMBERSHIP EXPIRED – HEALTH ADDICTION GYM\n\nHello ${m.members.full_name},\n\nYour gym membership has expired.\n\n💳 Renewal Details:\nPlan: ${m.plan}\nAmount: ₹${amount}\n\n📌 Pay using UPI QR:\nhttp://localhost:5173/upi-qr.png\n\nAfter payment, please show the receipt at the gym 💪\n\n– HEALTH ADDICTION GYM`
+        `⚠️ MEMBERSHIP EXPIRED – HEALTH ADDICTION GYM\n\nHello ${m.members.full_name},\n\nYour gym membership has expired.\n\n💳 Renewal Details:\nPlan: ${m.plan}\nAmount: ₹${amount}\n\n📌 After payment, please show the receipt at the gym 💪\n\n– HEALTH ADDICTION GYM`
       );
 
       setTimeout(() => {
