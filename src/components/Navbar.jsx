@@ -23,9 +23,9 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Lock body scroll when mobile menu is open
   useEffect(() => {
-    if (isOpen) document.body.style.overflow = "hidden";
-    else document.body.style.overflow = "unset";
+    document.body.style.overflow = isOpen ? "hidden" : "unset";
   }, [isOpen]);
 
   useEffect(() => setIsOpen(false), [location.pathname]);
@@ -36,31 +36,31 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-[100] flex justify-center px-4 md:px-6 pt-4 md:pt-6 pointer-events-none">
+    <nav className="fixed top-0 left-0 right-0 z-[100] flex justify-center px-3 md:px-6 pt-3 md:pt-6 pointer-events-none">
       <motion.div
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         className={`
           w-full max-w-6xl pointer-events-auto transition-all duration-500 ease-out
-          rounded-[1.5rem] md:rounded-[2.5rem] border overflow-hidden
+          rounded-[2rem] md:rounded-[2.5rem] border overflow-hidden
           ${
-            scrolled
-              ? "backdrop-blur-2xl py-2 bg-white/80 border-black/10 shadow-xl"
-              : "backdrop-blur-md py-3 md:py-4 bg-white/40 border-black/5"
+            scrolled || isOpen
+              ? "backdrop-blur-2xl py-2 bg-white/90 border-slate-200 shadow-2xl"
+              : "backdrop-blur-md py-3 md:py-4 bg-white/40 border-black/5 shadow-sm"
           }
         `}
       >
-        <div className="px-5 md:px-8 flex justify-between items-center">
-          {/* LOGO SECTION */}
-          <Link to="/" className="flex items-center gap-2 md:gap-3 group">
-            <div className="w-9 h-9 md:w-11 md:h-11 rounded-xl md:rounded-2xl bg-slate-950 flex items-center justify-center shadow-lg group-hover:bg-indigo-600 transition-all">
-              <Dumbbell className="w-5 h-5 md:w-6 md:h-6 text-white" />
+        <div className="px-4 md:px-8 flex justify-between items-center">
+          {/* LOGO SECTION - Scale down for tiny screens */}
+          <Link to="/" className="flex items-center gap-2 md:gap-3 group relative z-[110]">
+            <div className="w-8 h-8 md:w-11 md:h-11 rounded-xl md:rounded-2xl bg-slate-950 flex items-center justify-center shadow-lg group-hover:bg-indigo-600 transition-all">
+              <Dumbbell className="w-4 h-4 md:w-6 md:h-6 text-white" />
             </div>
             <div className="flex flex-col">
-              <h1 className="text-lg md:text-2xl font-black tracking-tighter text-slate-950 uppercase italic leading-none">
+              <h1 className="text-base md:text-2xl font-black tracking-tighter text-slate-950 uppercase italic leading-none">
                 GYM<span className="text-indigo-600">HA</span>
               </h1>
-              <span className="hidden xs:block text-[7px] md:text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 font-sans">OS Intelligence</span>
+              <span className="hidden xs:block text-[6px] md:text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 font-sans">OS Intelligence</span>
             </div>
           </Link>
 
@@ -99,72 +99,90 @@ export default function Navbar() {
             </button>
           </div>
 
-          {/* MOBILE TOGGLE */}
-          <div className="lg:hidden flex items-center gap-3">
+          {/* MOBILE TOGGLE - Better Touch Area */}
+          <div className="lg:hidden flex items-center gap-2 relative z-[110]">
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="p-2.5 bg-slate-900 text-white rounded-xl shadow-lg active:scale-90 transition-transform"
+              className={`p-3 rounded-2xl shadow-lg active:scale-90 transition-all ${
+                isOpen ? "bg-indigo-600 text-white" : "bg-slate-950 text-white"
+              }`}
             >
               {isOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
           </div>
         </div>
 
-        {/* MOBILE OVERLAY */}
+        {/* MOBILE OVERLAY - Optimized for Reachability */}
         <AnimatePresence>
           {isOpen && (
             <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "100vh", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="lg:hidden fixed inset-x-0 top-0 bg-white z-[-1] flex flex-col justify-center px-8"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="lg:hidden absolute inset-x-0 top-full mt-2 mx-0 bg-white border border-slate-200 rounded-[2rem] shadow-2xl overflow-hidden"
             >
-              <div className="space-y-6 mt-10">
-                <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400">Navigational Protocol</p>
-                {navLinks.map((link, i) => (
-                  <motion.div
-                    key={link.name}
-                    initial={{ x: -20, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    transition={{ delay: i * 0.1 }}
-                  >
-                    <Link
-                      to={link.path}
-                      className={`group flex items-center justify-between py-4 border-b border-slate-100 transition-colors ${
-                        location.pathname === link.path ? "text-indigo-600" : "text-slate-950"
-                      }`}
+              <div className="flex flex-col p-6 space-y-2">
+                <p className="text-[9px] font-black uppercase tracking-[0.4em] text-slate-400 mb-4 ml-2">System Directory</p>
+                {navLinks.map((link, i) => {
+                  const isActive = location.pathname === link.path;
+                  return (
+                    <motion.div
+                      key={link.name}
+                      initial={{ x: -10, opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                      transition={{ delay: i * 0.05 }}
                     >
-                      <span className="text-4xl font-black uppercase italic tracking-tighter">
-                        {link.name}
-                      </span>
-                      <ChevronRight className={`transition-transform ${location.pathname === link.path ? "translate-x-0" : "-translate-x-4 opacity-0"}`} />
-                    </Link>
-                  </motion.div>
-                ))}
-              </div>
+                      <Link
+                        to={link.path}
+                        className={`group flex items-center justify-between p-5 rounded-2xl transition-all ${
+                          isActive ? "bg-indigo-50 text-indigo-600" : "bg-slate-50 text-slate-600 active:bg-slate-100"
+                        }`}
+                      >
+                        <span className="text-2xl font-black uppercase italic tracking-tighter">
+                          {link.name}
+                        </span>
+                        <ChevronRight size={20} className={`transition-transform ${isActive ? "translate-x-0" : "-translate-x-2 opacity-0"}`} />
+                      </Link>
+                    </motion.div>
+                  );
+                })}
 
-              {/* MOBILE LOGOUT CARD */}
-              <div className="absolute bottom-12 left-8 right-8 space-y-4">
-                 <button 
+                {/* MOBILE LOGOUT */}
+                <motion.button 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.3 }}
                   onClick={handleLogout}
-                  className="w-full flex items-center justify-center gap-3 p-6 bg-rose-50 rounded-[2rem] border border-rose-100 group active:scale-95 transition-transform"
-                 >
-                    <LogOut size={20} className="text-rose-600" />
-                    <span className="text-sm font-black uppercase tracking-widest text-rose-600">Terminate Session</span>
-                 </button>
-                 
-                 <div className="p-6 bg-slate-50 rounded-[2rem] border border-slate-100">
-                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">Health Addiction Gym</p>
-                    <div className="flex items-center gap-2">
+                  className="mt-6 flex items-center justify-center gap-3 p-5 bg-rose-50 rounded-2xl border border-rose-100 text-rose-600 active:scale-95 transition-transform"
+                >
+                  <LogOut size={18} />
+                  <span className="text-xs font-black uppercase tracking-widest">Terminate Session</span>
+                </motion.button>
+
+                <div className="mt-4 p-4 text-center">
+                   <div className="flex items-center justify-center gap-2 mb-1">
                       <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
-                      <p className="text-[10px] font-bold text-slate-900 uppercase">System Active</p>
-                    </div>
-                 </div>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Protocol Active</p>
+                   </div>
+                </div>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
       </motion.div>
+      
+      {/* BACKGROUND BLUR OVERLAY - Closes menu on click */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setIsOpen(false)}
+            className="fixed inset-0 bg-slate-950/20 backdrop-blur-sm z-[-1] lg:hidden"
+          />
+        )}
+      </AnimatePresence>
     </nav>
   );
 }
