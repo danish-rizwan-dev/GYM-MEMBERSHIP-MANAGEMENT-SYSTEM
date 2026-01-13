@@ -1,23 +1,28 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
-import Navbar from "../components/Navbar";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, CheckCircle, Zap, User, Loader2 } from "lucide-react";
+import { 
+  Search, CheckCircle, Zap, User, Loader2, 
+  AlertCircle, Fingerprint
+} from "lucide-react";
+import Navbar from "../components/Navbar";
 
 export default function PunchIn() {
   const [search, setSearch] = useState("");
   const [members, setMembers] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [successId, setSuccessId] = useState(null);
+  const [loadingId, setLoadingId] = useState(null);
+  const [status, setStatus] = useState({ id: null, type: "" });
 
-  const today = new Date().toISOString().split("T")[0];
+  // Use local date to avoid timezone bugs
+  const getToday = () => new Date().toLocaleDateString('en-CA');
 
   useEffect(() => {
     if (search.length < 2) {
       setMembers([]);
       return;
     }
-    fetchMembers();
+    const delayDebounceFn = setTimeout(() => fetchMembers(), 300);
+    return () => clearTimeout(delayDebounceFn);
   }, [search]);
 
   async function fetchMembers() {
@@ -25,15 +30,15 @@ export default function PunchIn() {
       .from("members")
       .select("id, full_name, phone")
       .or(`full_name.ilike.%${search}%,phone.ilike.%${search}%`)
-      .limit(6);
-
+      .limit(5);
     setMembers(data || []);
   }
 
   async function punchIn(memberId) {
-    setLoading(true);
-    setSuccessId(null);
-    // ✅ Check if already logged today
+    const today = getToday();
+    setLoadingId(memberId);
+    
+    // 1. Check if already logged
     const { data: existing } = await supabase
       .from("attendance")
       .select("id")
@@ -42,115 +47,100 @@ export default function PunchIn() {
       .maybeSingle();
 
     if (existing) {
-      alert("⚠️ Already logged for today.");
-      setLoading(false);
+      setStatus({ id: memberId, type: "exists" });
+      setLoadingId(null);
+      setTimeout(() => setStatus({ id: null, type: "" }), 2000);
       return;
     }
 
-    // ✅ Mark attendance
+    // 2. Mark attendance
     const { error } = await supabase.from("attendance").insert([
-      {
-        member_id: memberId,
-        checkin_date: today,
-      },
+      { member_id: memberId, checkin_date: today }
     ]);
 
     if (!error) {
-      setSuccessId(memberId);
-      // Clear search after 1.5s to reset the screen
+      setStatus({ id: memberId, type: "success" });
       setTimeout(() => {
         setSearch("");
-        setSuccessId(null);
+        setStatus({ id: null, type: "" });
       }, 1500);
-    } else {
-      alert(error.message);
     }
-    setLoading(false);
+    setLoadingId(null);
   }
 
   return (
     <div className="min-h-screen bg-[#FDFDFD]">
       <Navbar />
 
-      <main className="max-w-3xl mx-auto px-6 pt-40 pb-20 space-y-10">
-        {/* HEADER */}
-        <header className="text-center space-y-2">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-[10px] font-black uppercase tracking-widest mb-2">
-            <Zap size={12} fill="currentColor" /> Rapid Entry
-          </div>
-          <h2 className="text-5xl font-black text-slate-950 italic uppercase tracking-tighter">
-            Punch <span className="text-indigo-600">In</span>
+      <main className="max-w-xl mx-auto px-4 pt-40 pb-20 space-y-8">
+        
+        {/* COMPACT TERMINAL HEADER */}
+        <header className="border-b border-slate-100 pb-6 text-center">
+          <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 italic leading-none mb-2">Attendance Terminal</h3>
+          <h2 className="text-3xl font-black text-slate-950 uppercase tracking-tighter">
+            Session <span className="text-indigo-600">Logger</span>
           </h2>
-          <p className="text-slate-500 font-medium">Verify identity to log daily session</p>
         </header>
 
         {/* SEARCH BOX */}
         <div className="relative group">
-          <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
+          <div className="absolute left-5 top-1/2 -translate-y-1/2 flex items-center gap-3 pointer-events-none">
+            <Fingerprint size={20} className="text-slate-300 group-focus-within:text-indigo-600 transition-colors" />
+          </div>
           <input
-            className="w-full bg-white border border-slate-200 rounded-[2rem] pl-14 p-6 text-lg font-bold shadow-sm focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-300"
-            placeholder="Athlete Name or Phone..."
+            className="w-full bg-slate-50 border border-slate-100 rounded-2xl pl-14 p-5 text-base font-bold outline-none focus:bg-white focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all placeholder:text-slate-300"
+            placeholder="Scan Name or Contact..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             autoFocus
           />
         </div>
 
-        {/* RESULTS AREA */}
-        <div className="space-y-4">
-          <AnimatePresence>
+        {/* ATTENDANCE RESULTS */}
+        <div className="space-y-3">
+          <AnimatePresence mode="popLayout">
             {members.map((m) => (
               <motion.div
                 key={m.id}
+                layout
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                className={`flex justify-between items-center p-5 rounded-3xl border transition-all ${
-                  successId === m.id 
-                  ? "bg-emerald-50 border-emerald-200" 
-                  : "bg-white border-slate-100 hover:border-indigo-200 shadow-sm"
+                exit={{ opacity: 0, scale: 0.98 }}
+                className={`p-4 rounded-2xl border flex items-center justify-between transition-all ${
+                  status.id === m.id && status.type === 'success' ? "bg-emerald-50 border-emerald-200" :
+                  status.id === m.id && status.type === 'exists' ? "bg-amber-50 border-amber-200" :
+                  "bg-white border-slate-100 hover:border-indigo-200 shadow-sm"
                 }`}
               >
                 <div className="flex items-center gap-4">
-                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-colors ${
-                    successId === m.id ? "bg-emerald-500 text-white" : "bg-slate-100 text-slate-500"
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${
+                    status.id === m.id && status.type === 'success' ? "bg-emerald-500 text-white" : "bg-slate-50 text-slate-400"
                   }`}>
-                    <User size={20} />
+                    <User size={18} />
                   </div>
                   <div>
-                    <p className="font-black text-slate-900 uppercase tracking-tight">{m.full_name}</p>
-                    <p className="text-xs text-slate-400 font-bold">{m.phone}</p>
+                    <p className="font-black text-slate-900 uppercase italic tracking-tight text-sm leading-none mb-1">{m.full_name}</p>
+                    <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">{m.phone}</p>
                   </div>
                 </div>
 
                 <button
                   onClick={() => punchIn(m.id)}
-                  disabled={loading || successId === m.id}
-                  className={`relative flex items-center gap-2 px-6 py-3 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all ${
-                    successId === m.id
-                      ? "bg-emerald-500 text-white"
-                      : "bg-slate-950 text-white hover:bg-indigo-600 active:scale-95 disabled:opacity-50"
+                  disabled={loadingId === m.id}
+                  className={`h-10 px-5 rounded-xl font-black uppercase tracking-widest text-[9px] transition-all flex items-center gap-2 ${
+                    status.id === m.id && status.type === 'success' ? "bg-emerald-500 text-white" :
+                    status.id === m.id && status.type === 'exists' ? "bg-amber-500 text-white shadow-lg" :
+                    "bg-slate-950 text-white hover:bg-indigo-600 active:scale-95"
                   }`}
                 >
-                  {loading && !successId ? (
-                    <Loader2 size={16} className="animate-spin" />
-                  ) : successId === m.id ? (
-                    <>
-                      <CheckCircle size={16} /> Logged
-                    </>
-                  ) : (
-                    "Confirm Entry"
-                  )}
+                  {loadingId === m.id ? <Loader2 size={14} className="animate-spin" /> : 
+                   status.id === m.id && status.type === 'success' ? <><CheckCircle size={14} /> OK</> :
+                   status.id === m.id && status.type === 'exists' ? "ALREADY LOGGED" : 
+                   "MARK ENTRY"}
                 </button>
               </motion.div>
             ))}
           </AnimatePresence>
-
-          {search.length >= 2 && members.length === 0 && (
-            <div className="text-center py-20 bg-slate-50 rounded-[3rem] border border-dashed border-slate-200">
-              <p className="text-slate-400 font-bold italic">Athlete identity not found</p>
-            </div>
-          )}
         </div>
       </main>
     </div>
