@@ -33,8 +33,7 @@ export default function PunchIn() {
   async function punchIn(memberId) {
     setLoading(true);
     setSuccessId(null);
-
-    // ❌ Check duplicate attendance
+    // ✅ Check if already logged today
     const { data: existing } = await supabase
       .from("attendance")
       .select("id")
