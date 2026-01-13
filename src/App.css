@@ -1,0 +1,44 @@
+/* 1. Import Tailwind (V4 Syntax) */
+@import "tailwindcss";
+
+@layer components {
+  /* 1. Base Glass Card Structure */
+  .glass-card {
+    @apply transition-all duration-500 backdrop-blur-2xl border rounded-[2.5rem];
+  }
+
+  /* 2. Light Mode Styles (The "Cloud Glass" look) */
+  :root:not(.dark) .glass-card {
+    background: rgba(255, 255, 255, 0.7); /* Brighter for clarity */
+    border-color: rgba(0, 0, 0, 0.08);    /* Soft dark border for definition */
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.05); /* Soft depth */
+  }
+
+  /* 3. Dark Mode Styles (The "Midnight Glass" look) */
+  .dark .glass-card {
+    background: rgba(255, 255, 255, 0.03); /* Translucent dark */
+    border-color: rgba(255, 255, 255, 0.1); /* Subtle neon highlight */
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.6);  /* Deep shadow */
+  }
+
+  /* 4. Adaptive Atheno Gradient */
+  .atheno-gradient {
+    transition: background 0.5s ease;
+  }
+
+  /* Light Gradient: Soft and airy */
+  :root:not(.dark) .atheno-gradient {
+    background: 
+      radial-gradient(circle at 0% 0%, rgba(14, 165, 233, 0.1) 0, transparent 50%),
+      radial-gradient(circle at 100% 100%, rgba(139, 92, 246, 0.1) 0, transparent 50%),
+      #f8fafc; /* Slate 50 background */
+  }
+
+  /* Dark Gradient: Deep and neon */
+  .dark .atheno-gradient {
+    background: 
+      radial-gradient(circle at 0% 0%, rgba(34, 211, 238, 0.15) 0, transparent 50%),
+      radial-gradient(circle at 100% 100%, rgba(139, 92, 246, 0.15) 0, transparent 50%),
+      #020617; /* Deep Midnight background */
+  }
+}
